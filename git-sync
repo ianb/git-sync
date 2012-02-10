@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
+    echo "usage: git sync [remote-name]"
+    echo
+    echo "Sync's the current repository to another remote host, using git,"
+    echo "but not using this repository."
+    echo
+    echo "You must set sync.default.repo (the path to store the repository)"
+    echo "and git.default.remote (the remote repository to push to).  Example:"
+    echo "$ git config --add sync.default.repo .remote-repo"
+    echo "$ git config --add sync.default.remote git@hostname:/path.git"
+    exit
+fi
+
+if [ -z "$1" ] ; then
+    dest=default
+else
+    dest="$1"
+fi
+
+repo_location="$(git config --get --path sync.${dest}.repo || true)"
+if [ -z "$repo_location" ] ; then
+    repo_location="$(git config --get --path sync.repo || true)"
+    if [ -z "$repo_location" ] ; then
+        repo_location=/tmp/repos
+    fi
+    repo_location="${repo_location}/$(basename $(pwd))"
+fi
+
+if [ ! -e $repo_location ] ; then
+    remote="$(git config --get sync.${dest}.remote || true)"
+    if [ -z "$remote" ] ; then
+        echo "You must set sync.${dest}.remote"
+        echo "Like:"
+        echo "  git config --add sync.${dest}.remote git@host.com:/path.git"
+        exit 2
+    fi
+    echo "making git repo in $repo_location"
+    mkdir -p "$(basename $repo_location)"
+    git clone $remote $repo_location
+fi
+
+if [ -e .syncignore ] ; then
+    rsync_option="--exclude-from=.syncignore"
+else
+    rsync_option=""
+fi
+
+## FIXME: should I exclude untracked files?  Seems like it
+
+rsync $rsync_option --recursive --delete --exclude .git . $repo_location
+
+if [ -e .syncignore ] ; then
+    cat .syncignore >> $repo_location/.gitignore
+fi
+
+build_command="$(git config --get sync.${dest}.build || true)"
+if [ -n "$build_command" ] ; then
+    echo "Running $build_command"
+    (
+        cd $repo_location
+        $build_command
+    )
+fi
+
+version="$(git describe --always --dirty)"
+(
+    cd $repo_location
+    adds="$(git status -s | awk '/^\?\?/ {print $2}')"
+    if [ -n "$adds" ] ; then
+        git add $adds
+    fi
+    git commit -a -m "deployment $version"
+    git push
+)
