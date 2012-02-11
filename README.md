@@ -1,4 +1,4 @@
-= git-sync
+# git-sync
 
 There's a bunch of web deployment systems lately that use git for uploading applications.
 
@@ -15,7 +15,7 @@ That said, git is not a bad file synchronization tool.  It's actually pretty dar
 
 This command lets you use git like a sync tool, separate from using it as your source control.  It's written as a git extension because whatever.
 
-== Using git-sync
+## Using git-sync
 
 Put `git-sync` somewhere on your `$PATH`.  You can call `git-sync` or `git sync`.
 
@@ -39,7 +39,7 @@ If you want to leave files out of what gets sync'd, but still keep those files i
 
 Note in all these that `default` is a string you can change, e.g., you can make configuration values for `production` (`sync.production.remote`) and do `git sync production`.
 
-== History
+## History
 
 You'll still have a nice set of history of what you've uploaded, though that history will be strictly per-remote.  It won't be directly attached to your main repository, but the commit messages will show the relation.
 
