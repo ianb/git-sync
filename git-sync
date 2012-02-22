@@ -59,10 +59,16 @@ fi
 
 build_command="$(git config --get sync.${dest}.build || true)"
 if [ -n "$build_command" ] ; then
+    build_path="$(pwd)"
     echo "Running $build_command"
     (
         cd $repo_location
-        $build_command
+        # check if buld_command exists in `repo_location`
+        if [ -e $build_command ]; then
+            $build_command
+        else
+            $build_path/$build_command
+        fi
     )
 fi
 
