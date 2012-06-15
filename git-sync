@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "usage: git sync [remote-name]"
@@ -10,8 +10,10 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo
     echo "You must set sync.default.repo (the path to store the repository)"
     echo "and git.default.remote (the remote repository to push to).  Example:"
-    echo "$ git config --add sync.default.repo .remote-repo"
-    echo "$ git config --add sync.default.remote git@hostname:/path.git"
+    echo "  $ git config --add sync.default.repo .remote-repo"
+    echo "  $ git config --add sync.default.remote git@hostname:/path.git"
+    echo "And optionally:"
+    echo "  $ git config --add sync.default.branch master"
     exit
 fi
 
@@ -32,15 +34,23 @@ fi
 
 if [ ! -e $repo_location ] ; then
     remote="$(git config --get sync.${dest}.remote || true)"
+    remote_branch="$(git config --get sync.${dest}.branch || true)"
     if [ -z "$remote" ] ; then
         echo "You must set sync.${dest}.remote"
         echo "Like:"
         echo "  git config --add sync.${dest}.remote git@host.com:/path.git"
         exit 2
     fi
-    echo "making git repo in $repo_location"
+    if [ -z "$remote_branch" ] ; then
+        git_op=""
+        git_msg=""
+    else
+        git_op="-b $remote_branch"
+        git_msg=" from branch $remote_branch"
+    fi
+    echo "making git repo in $repo_location$git_msg"
     mkdir -p "$(basename $repo_location)"
-    git clone $remote $repo_location
+    git clone $git_op $remote $repo_location
 fi
 
 if [ -e .syncignore ] ; then
