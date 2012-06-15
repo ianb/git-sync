@@ -43,15 +43,9 @@ if [ ! -e $repo_location ] ; then
     git clone $remote $repo_location
 fi
 
-if [ -e .syncignore ] ; then
-    rsync_option="--exclude-from=.syncignore"
-else
-    rsync_option=""
-fi
-
 ## FIXME: should I exclude untracked files?  Seems like it
-
-rsync $rsync_option --recursive --delete --exclude .git . $repo_location
+# per discussion over build tools issue, rsync everything
+rsync --recursive --delete --exclude .git . $repo_location
 
 if [ -e .syncignore ] ; then
     cat .syncignore >> $repo_location/.gitignore
@@ -59,16 +53,10 @@ fi
 
 build_command="$(git config --get sync.${dest}.build || true)"
 if [ -n "$build_command" ] ; then
-    build_path="$(pwd)"
     echo "Running $build_command"
     (
         cd $repo_location
-        # check if buld_command exists in `repo_location`
-        if [ -e $build_command ]; then
-            $build_command
-        else
-            $build_path/$build_command
-        fi
+        $build_command
     )
 fi
 
