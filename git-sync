@@ -80,5 +80,5 @@ version="$(git describe --always --dirty)"
         git add $adds
     fi
     git commit -a -m "deployment $version"
-    git push
+    git push origin master
 )
