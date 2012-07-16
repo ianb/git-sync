@@ -51,6 +51,18 @@ if [ ! -e $repo_location ] ; then
     echo "making git repo in $repo_location$git_msg"
     mkdir -p "$(basename $repo_location)"
     git clone $git_op $remote $repo_location
+else
+    # pull from master to ensure we're uptodate
+    (
+        cd $repo_location
+        git pull origin master:master
+    )
+fi
+
+if [ -e .syncignore ] ; then
+    rsync_option="--exclude-from=.syncignore"
+else
+    rsync_option=""
 fi
 
 ## FIXME: should I exclude untracked files?  Seems like it
