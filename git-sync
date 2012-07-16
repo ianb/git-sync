@@ -41,6 +41,12 @@ if [ ! -e $repo_location ] ; then
     echo "making git repo in $repo_location"
     mkdir -p "$(basename $repo_location)"
     git clone $remote $repo_location
+else
+    # pull from master to ensure we're uptodate
+    (
+        cd $repo_location
+        git pull origin master:master
+    )
 fi
 
 if [ -e .syncignore ] ; then
