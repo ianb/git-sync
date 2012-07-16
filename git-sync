@@ -53,15 +53,9 @@ if [ ! -e $repo_location ] ; then
     git clone $git_op $remote $repo_location
 fi
 
-if [ -e .syncignore ] ; then
-    rsync_option="--exclude-from=.syncignore"
-else
-    rsync_option=""
-fi
-
 ## FIXME: should I exclude untracked files?  Seems like it
-
-rsync $rsync_option --recursive --delete --exclude .git . $repo_location
+# per discussion over build tools issue, rsync everything
+rsync --recursive --delete --exclude .git . $repo_location
 
 if [ -e .syncignore ] ; then
     cat .syncignore >> $repo_location/.gitignore
@@ -84,5 +78,5 @@ version="$(git describe --always --dirty)"
         git add $adds
     fi
     git commit -a -m "deployment $version"
-    git push
+    git push origin master
 )
